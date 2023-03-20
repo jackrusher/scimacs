@@ -48,6 +48,9 @@
 (defn transpile-fn [[_fn args & body]]
   `(~'lambda ~(sequence args) ~@(map transpile body)))
 
+(defn transpile-var [[_var sym]]
+  (symbol (str \"#'\" sym)))
+
 (defn transpile [form]
   (if (seq? form)
     (case (first form)
@@ -56,6 +59,7 @@
       defn (transpile-defn form)
       map (transpile-map form)
       fn (transpile-fn form)
+      var (transpile-var form)
       (sequence (map transpile form)))
     form))")
 
@@ -81,6 +85,8 @@ my-foo ;; 22
    (inc x)))
 
 (clj! (map (fn [x] (* x x)) [1 2 3])) ;; => (1 4 9)
+
+(clj! (map #'inc [1 2 3]))
 
 (clj! (defn inc [x]
         (+ x 1)))
