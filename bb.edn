@@ -1,7 +1,10 @@
 {:tasks
  {:requires ([babashka.fs :as fs])
-  :init (do (def libsci (str (first (fs/glob "clj" "LibScimacs.{dylib,dll,solib}"))))
-            (def uberjar "clj/target/uber.jar"))
+  :init (do
+          (def libsci (str (first (fs/glob "clj" "LibScimacs.{dylib,dll,solib}"))))
+          (def lib-ext (fs/extension libsci))
+          (def local-lib (str "scimacs." lib-ext))
+          (def uberjar "clj/target/uber.jar"))
   javac {:doc "Build libscimacs's JVM bytecode"
          :task (when (seq (fs/modified-since uberjar ["clj/src" "clj/build.clj" "clj/deps.edn"]))
                  (clojure
@@ -30,5 +33,5 @@
 
   all {:doc "Build all"
        :depends [rustc]
-       :task (when-not (fs/exists? "scimacs.dylib")
-               (fs/create-sym-link "scimacs.dylib" "target/debug/libscimacs.dylib" ))}}}
+       :task (when-not (fs/exists? local-lib)
+               (fs/create-sym-link local-lib "target/debug/libscimacs.dylib" ))}}}
