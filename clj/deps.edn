@@ -1,7 +1,8 @@
 {:paths ["src"]
  :deps {org.clojure/clojure {:mvn/version "1.11.1"}
-        org.babashka/sci {:mvn/version "0.7.39"}}
- :aliases {;; Run with clj -T:build 
+        org.babashka/sci {:mvn/version "0.7.39"}
+        org.graalvm.nativeimage/svm {:mvn/version "22.3.1"}}
+ :aliases {;; Run with clj -T:build
            :build {:deps {io.github.clojure/tools.build {:mvn/version "0.9.4"}}
                    :jvm-opts ["-Dclojure.compiler.direct-linking=true"
                               "-Dclojure.spec.skip-macros=true"]
