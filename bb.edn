@@ -1,0 +1,29 @@
+{:tasks
+ {:init (def libsci (str (first (fs/glob "clj" "LibScimacs.{dylib,dll,solib}"))))
+  :requires ([babashka.fs :as fs])
+  javac {:doc "Build libscimacs's JVM bytecode"
+         :task (when (seq (fs/modified-since "clj/target/classes" ["clj/src" "clj/build.clj" "clj/deps.edn"]))
+                 (clojure
+                  {:dir "clj"} "-T:build libscimacs"))}
+  native-image {:doc "Build native-image"
+                :depends [javac]
+                :task (when (seq (fs/modified-since libsci ["clj/target/classes"]))
+                        (shell
+                         {:dir "clj"}
+                         "native-image"
+                         "--shared"
+                         "-cp" "target/classes"
+                         "-H:Name=LibScimacs"
+                         "--enable-preview"
+                         "-H:+ReportExceptionStackTraces"
+                         "-J-Dclojure.spec.skip-macros=true"
+                         "-J-Dclojure.compiler.direct-linking=true"
+                         "--initialize-at-build-time"
+                         "--verbose"
+                         "--no-fallback"
+                         "--no-server"
+                         "-J-Xmx3g"))}
+  rustc {:doc "Build Rust binary"
+         :depends [native-image]
+         :task (when (seq (fs/modified-since "target" libsci))
+                 (shell "cargo build"))}}}

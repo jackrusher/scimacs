@@ -8,7 +8,7 @@ fn main() {
 
     println!("cargo:rustc-link-search=./clj");
     println!("cargo:rustc-link-lib=Scimacs");
-    
+
     println!("cargo:rustc-link-search={path}", path = path);
 
     let bindings = bindgen::Builder::default()

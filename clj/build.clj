@@ -11,7 +11,6 @@
 
 (defn libscimacs [_]
   (clean nil)
-  
   (b/compile-clj {:basis basis
                   :src-dirs ["src"]
                   :class-dir class-dir
@@ -20,6 +19,4 @@
 
   (b/javac {:src-dirs ["src"]
             :class-dir class-dir
-            :basis basis
-            ;; TODO fix classpath here to use GRAALVM's home rather than hardcoded MacOS path
-            :javac-opts ["-cp" "/Library/Java/JavaVirtualMachines/graalvm-ce-java19-22.3.1/Contents/Home/lib/svm/builder/svm.jar:target/classes"]}))
+            :basis basis}))
