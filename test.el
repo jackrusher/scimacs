@@ -24,4 +24,7 @@
                 "(reduce + (range 5))")))
   (message "Could not find loadable module!"))
 
+(scimacs-eval-sci "(defn foo [x] (inc x))")
+;; foo is still defined in the following call:
+(scimacs-eval-sci "(foo 1)")
 
