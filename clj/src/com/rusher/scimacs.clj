@@ -2,12 +2,19 @@
   (:require [sci.core :as sci])
   (:gen-class :methods [^{:static true} [evalString [String] String]]))
 
+(set! *warn-on-reflection* true)
+
+(sci/alter-var-root sci/out (constantly *out*)) ;; enable println, etc.
+(sci/alter-var-root sci/err (constantly *err*)) ;; enable println, etc.
+
+(def ctx (sci/init {:namespaces {}
+                    :classes {}}))
+
 (defn -evalString [s]
-  (sci/binding [sci/out *out*] ; enable println, etc.
-    (str (try (sci/eval-string s)
-              (catch Exception e
-                {:error (str (type e))
-                 :message (.getMessage e)})))))
+  (try (pr-str (sci/eval-string* ctx s))
+       (catch Exception e
+         (pr-str {:error (str (type e))
+                  :message (.getMessage e)}))))
 
 ;; as second arg to eval-string, this binds a cheshire.core function within sci
 #_{:namespaces {'cheshire.core {'generate-string cheshire/generate-string}}}

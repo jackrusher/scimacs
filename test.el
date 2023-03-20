@@ -24,6 +24,8 @@
                 "(reduce + (range 5))")))
   (message "Could not find loadable module!"))
 
+
+
 (scimacs-eval-sci "
 (ns transpiler)
 (declare transpile)
@@ -40,8 +42,11 @@
 (defn transpile-inc [[_let expr]]
  `(~'+ 1 ~(transpile expr)))
 
-(defn transpile-map [_map fn expr]
+(defn transpile-map [[_map fn expr]]
   `(~'mapcar ~(transpile fn) ~(transpile expr)))
+
+(defn transpile-fn [[_fn args & body]]
+  `(~'lambda ~(sequence args) ~@(map transpile body)))
 
 (defn transpile [form]
   (if (seq? form)
@@ -50,11 +55,12 @@
       inc (transpile-inc form)
       defn (transpile-defn form)
       map (transpile-map form)
+      fn (transpile-fn form)
       (sequence (map transpile form)))
     form))")
 
 (defun clj-str-fn (body)
-  (scimacs-eval-sci (concat transpiler (format " (transpiler/transpile '%s)" body))))
+  (scimacs-eval-sci (format "(transpiler/transpile '%s)" body)))
 
 (defmacro clj! (body)
   (let* ((elisp (clj-str-fn body))
@@ -74,9 +80,5 @@ my-foo ;; 22
    (setq x (inc x))
    (inc x)))
 
-(clj-str-fn '(filter x x))
-(clj-str-fn '(map inc [1 2 3]))
-(clj! (mapv inc [1 2 3]))
-
-
+(clj! (map (fn [x] (* x x)) [1 2 3])) ;; => (1 4 9)
 
