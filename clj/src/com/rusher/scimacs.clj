@@ -11,10 +11,10 @@
                     :classes {}}))
 
 (defn -evalString [s]
-  (try (str (sci/eval-string* ctx s))
+  (try (pr-str (sci/eval-string* ctx s))
        (catch Exception e
-         (str {:error (str (type e))
-               :message (.getMessage e)}))))
+         (pr-str {:error (str (type e))
+                  :message (.getMessage e)}))))
 
 ;; as second arg to eval-string, this binds a cheshire.core function within sci
 #_{:namespaces {'cheshire.core {'generate-string cheshire/generate-string}}}
