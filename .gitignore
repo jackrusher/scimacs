@@ -12,3 +12,11 @@ pom.xml.asc
 .lein-failures
 .nrepl-port
 .cpcache/
+Cargo.lock
+LibScimacs.build_artifacts.txt
+LibScimacs_dynamic.h
+graal_isolate.h
+graal_isolate_dynamic.h
+LibScimacs.dylib
+LibScimacs.h
+scimacs.dylib
