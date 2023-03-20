@@ -25,43 +25,14 @@
   (message "Could not find loadable module!"))
 
 
+(defun my-file-contents (filename)
+  "Return the contents of FILENAME."
+  (with-temp-buffer
+    (insert-file-contents filename)
+    (buffer-string)))
 
-(scimacs-eval-sci "
-(ns transpiler)
-(declare transpile)
-
-(defn transpile-defn [[_defn name args & body]]
- `(~'defun ~name ~(sequence args) ~@(map transpile body)))
-
-(defn transpile-let [[_let bindings & body]]
- `(~'let* ~(sequence (map (fn [[binding expr]]
-                         (list binding (transpile expr)))
-                       (partition 2 bindings)))
-    ~@(map transpile body)))
-
-(defn transpile-inc [[_let expr]]
- `(~'+ 1 ~(transpile expr)))
-
-(defn transpile-map [[_map fn expr]]
-  `(~'mapcar ~(transpile fn) ~(transpile expr)))
-
-(defn transpile-fn [[_fn args & body]]
-  `(~'lambda ~(sequence args) ~@(map transpile body)))
-
-(defn transpile-var [[_var sym]]
-  (symbol (str \"#'\" sym)))
-
-(defn transpile [form]
-  (if (seq? form)
-    (case (first form)
-      let (transpile-let form)
-      inc (transpile-inc form)
-      defn (transpile-defn form)
-      map (transpile-map form)
-      fn (transpile-fn form)
-      var (transpile-var form)
-      (sequence (map transpile form)))
-    form))")
+(scimacs-eval-sci
+ (my-file-contents "transpiler.clj"))
 
 (defun clj-str-fn (body)
   (scimacs-eval-sci (format "(transpiler/transpile '%s)" body)))
@@ -87,6 +58,9 @@ my-foo ;; 22
 (clj! (map (fn [x] (* x x)) [1 2 3])) ;; => (1 4 9)
 
 (clj! (map #'inc [1 2 3]))
+
+;; #' may be elided for higher order functions in map
+(clj! (map inc [1 2 3]))
 
 (clj! (defn inc [x]
         (+ x 1)))
