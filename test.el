@@ -57,11 +57,10 @@ my-foo ;; 22
 
 (clj! (map (fn [x] (* x x)) [1 2 3])) ;; => (1 4 9)
 
+(clj! (defn inc [x]
+        (+ x 1)))
+
 (clj! (map #'inc [1 2 3]))
 
 ;; #' may be elided for higher order functions in map
 (clj! (map inc [1 2 3]))
-
-(clj! (defn inc [x]
-        (+ x 1)))
-
