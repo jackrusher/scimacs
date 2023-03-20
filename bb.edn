@@ -34,4 +34,4 @@
   all {:doc "Build all"
        :depends [rustc]
        :task (when-not (fs/exists? local-lib)
-               (fs/create-sym-link local-lib "target/debug/libscimacs.dylib" ))}}}
+               (fs/create-sym-link local-lib (str "target/debug/libscimacs." lib-ext)))}}}
