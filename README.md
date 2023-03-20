@@ -19,13 +19,8 @@ doing this from the top-level of this project's directory structure
 mentioned above):
 
 ``` shell
-$ bb rustc
-$ ln -s target/debug/libscimacs.dylib ./scimacs.dylib
+$ bb all
 ```
-
-The second step will give you a loadable module suitable for use with
-emacs in the top-level of the project. You only need to make this link
-once, even if you re-compile the module.
 
 ## Testing
 
