@@ -1,24 +1,24 @@
 {:tasks
- {:init (def libsci (str (first (fs/glob "clj" "LibScimacs.{dylib,dll,solib}"))))
-  :requires ([babashka.fs :as fs])
+ {:requires ([babashka.fs :as fs])
+  :init (do (def libsci (str (first (fs/glob "clj" "LibScimacs.{dylib,dll,solib}"))))
+            (def uberjar "clj/target/uber.jar"))
   javac {:doc "Build libscimacs's JVM bytecode"
-         :task (when (seq (fs/modified-since "clj/target/classes" ["clj/src" "clj/build.clj" "clj/deps.edn"]))
+         :task (when (seq (fs/modified-since uberjar ["clj/src" "clj/build.clj" "clj/deps.edn"]))
                  (clojure
                   {:dir "clj"} "-T:build libscimacs"))}
   native-image {:doc "Build native-image"
                 :depends [javac]
-                :task (when (seq (fs/modified-since libsci ["clj/target/classes"]))
+                :task (when (seq (fs/modified-since libsci uberjar))
                         (shell
                          {:dir "clj"}
                          "native-image"
+                         "-cp" "target/uber.jar"
                          "--shared"
-                         "-cp" "target/classes"
                          "-H:Name=LibScimacs"
                          "--enable-preview"
                          "-H:+ReportExceptionStackTraces"
                          "-J-Dclojure.spec.skip-macros=true"
                          "-J-Dclojure.compiler.direct-linking=true"
-                         "--initialize-at-build-time"
                          "--verbose"
                          "--no-fallback"
                          "--no-server"
