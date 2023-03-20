@@ -20,7 +20,7 @@ doing this from the top-level of this project's directory structure
 ``` shell
 $ cd clj
 $ clj -T:build libscimacs
-$ native-image --shared -cp target/classes/ -H:Name=LibScimacs --enable-preview -H:+ReportExceptionStackTraces -J-Dclojure.spec.skip-macros=true -J-Dclojure.compiler.direct-linking=true --initialize-at-build-time --verbose --no-fallback --no-server -J-Xmx3g
+$ native-image --shared -cp -cp target/classes/:`clj -Spath` -H:Name=LibScimacs --enable-preview -H:+ReportExceptionStackTraces -J-Dclojure.spec.skip-macros=true -J-Dclojure.compiler.direct-linking=true --initialize-at-build-time --verbose --no-fallback --no-server -J-Xmx3g
 $ cd ..
 $ cargo build
 $ ln -s target/debug/libscimacs.dylib ./scimacs.dylib
