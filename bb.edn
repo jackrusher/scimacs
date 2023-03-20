@@ -26,4 +26,9 @@
   rustc {:doc "Build Rust binary"
          :depends [native-image]
          :task (when (seq (fs/modified-since "target" libsci))
-                 (shell "cargo build"))}}}
+                 (shell "cargo build"))}
+
+  all {:doc "Build all"
+       :depends [rustc]
+       :task (when-not (fs/exists? "scimacs.dylib")
+               (fs/create-sym-link "scimacs.dylib" "target/debug/libscimacs.dylib" ))}}}
