@@ -9,8 +9,11 @@
 (defn add-locals [env locals]
   (update env :locals merge (zipmap locals locals)))
 
+(defn normalize-arg [arg]
+  (if (= '& arg) '&rest arg))
+
 (defn transpile-defn [[_defn name args & body] env]
-  `(~'defun ~name ~(sequence args) ~@(map #(transpile % env) body)))
+  `(~'defun ~name ~(map normalize-arg args) ~@(map #(transpile % env) body)))
 
 (defn transpile-let [[_let bindings & body] env]
   (let [[bindings env]
@@ -32,7 +35,7 @@
              ~(transpile expr env)))
 
 (defn transpile-fn [[_fn args & body] env]
-  `(~'lambda ~(sequence args) ~@(map #(transpile % env) body)))
+  `(~'lambda ~(map normalize-arg args) ~@(map #(transpile % env) body)))
 
 (defn transpile-var [[_var sym] _env]
   (symbol (str "#'" sym)))
@@ -46,6 +49,7 @@
       map (transpile-map form env)
       fn (transpile-fn form env)
       var (transpile-var form env)
+      comment nil
       (sequence (map #(transpile % env) form)))
     form))
 

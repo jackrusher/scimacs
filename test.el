@@ -47,6 +47,17 @@
    (let [y (inc x)]
      (* y 2))))
 
+(clj!
+ (defn foo [x & xs]
+   (let [y (inc x)]
+     (* y 2))))
+
+(clj!
+ (comment
+  (foo 1)
+  (foo 1 2)
+  (foo 1 2 3)))
+
 (setq my-foo (foo 10))
 my-foo ;; 22
 
@@ -64,3 +75,5 @@ my-foo ;; 22
 
 ;; #' may be elided for higher order functions in map
 (clj! (map inc [1 2 3]))
+
+;;
