@@ -28,7 +28,8 @@
                          "-J-Xmx3g"))}
   rustc {:doc "Build Rust binary"
          :depends [native-image]
-         :task (when (seq (fs/modified-since "target" libsci))
+         :task (when (or (seq (fs/modified-since "target" libsci))
+                         (seq (fs/modified-since (str "target/debug/libscimacs." lib-ext) "src/lib.rs")))
                  (shell "cargo build"))}
 
   all {:doc "Build all"
