@@ -7,6 +7,7 @@ jobs:
   clojure:
 
     strategy:
+      fail-fast: false
       matrix:
         os: [macOS-latest, ubuntu-latest, windows-latest]
         emacs_version: ['28.1']
