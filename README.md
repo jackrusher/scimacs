@@ -12,12 +12,21 @@ probably not ready for you yet.
 
 Requires Clojure, babashka, GraalVM version 22.3.1, and Rust.
 
+### MacOS
 If you are using a recent version of MacOS, have all the deps
 installed, and are a relatively lucky person, it might be as easy as
 doing this from the top-level of this project's directory structure
 (making sure that the Java on your path is the GraalVM version
 mentioned above):
 
+### Linux x86_64 (using Nix Flakes)
+The `flakes.nix` file contains the necessary instructions for a
+repeatable build environment on Linux x86_64.
+``` shell
+$ nix develop
+```
+
+### Common
 ``` shell
 $ bb all
 ```
