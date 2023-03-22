@@ -9,6 +9,7 @@ jobs:
     strategy:
       matrix:
         os: [macOS-latest, ubuntu-latest, windows-latest]
+        emacs_version: ['28.1']
 
     runs-on: ${{ matrix.os }}
 
@@ -49,3 +50,37 @@ jobs:
 
       - name: Build all
         run: bb all
+
+      - name: Set up Emacs
+        if: "!startsWith (matrix.os, 'windows')"
+        uses: purcell/setup-emacs@master
+        with:
+          version: ${{matrix.emacs_version}}
+
+      - name: Set up Emacs on Windows
+        if: startsWith (matrix.os, 'windows')
+        uses: jcs090218/setup-emacs-windows@master
+        with:
+          version: ${{matrix.emacs_version}}
+
+      # - name: Workaround for Emacs 27.2 bug on MS-Windows
+      #   if: startsWith (matrix.os, 'windows')
+      #   run: |
+      #     # Remove expired DST Root CA X3 certificate. Workaround
+      #     # for https://debbugs.gnu.org/cgi/bugreport.cgi?bug=51038
+      #     # bug on Emacs 27.2.
+      #     gci cert:\LocalMachine\Root\DAC9024F54D8F6DF94935FB1732638CA6AD77C13
+      #     gci cert:\LocalMachine\Root\DAC9024F54D8F6DF94935FB1732638CA6AD77C13 | Remove-Item
+
+      # - name: Install Eldev
+      #   if: "!startsWith (matrix.os, 'windows')"
+      #   run: curl -fsSL https://raw.github.com/doublep/eldev/master/webinstall/github-eldev | sh
+
+      # - name: Install Eldev on MS-Windows
+      #   if: startsWith (matrix.os, 'windows')
+      #   run: |
+      #     curl.exe -fsSL https://raw.github.com/doublep/eldev/master/webinstall/github-eldev.bat | cmd /Q
+
+      - name: Test the project
+        run: |
+          emacs --script test.el
