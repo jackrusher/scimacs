@@ -28,7 +28,7 @@
                          "-J-Xmx3g"))}
   rustc {:doc "Build Rust binary"
          :depends [native-image]
-         :task (when (seq (fs/modified-since "target" [libsci "src" "Cargo.toml"]))
+         :task (when (seq (fs/modified-since "target/debug/libscimacs.dylib" [libsci "src" "Cargo.toml"]))
                  (shell "cargo build"))}
 
   all {:doc "Build all"
