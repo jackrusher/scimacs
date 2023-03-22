@@ -4,7 +4,8 @@
           (def libsci (str (first (fs/glob "clj" "LibScimacs.{dylib,dll,so}"))))
           (def lib-ext (fs/extension libsci))
           (def local-lib (str "scimacs." lib-ext))
-          (def uberjar "clj/target/uber.jar"))
+          (def uberjar "clj/target/uber.jar")
+          (def rust-lib (str "target/debug/libscimacs." lib-ext)))
   javac {:doc "Build libscimacs's JVM bytecode"
          :task (when (seq (fs/modified-since uberjar ["clj/src" "clj/build.clj" "clj/deps.edn"]))
                  (clojure
@@ -28,10 +29,10 @@
                          "-J-Xmx3g"))}
   rustc {:doc "Build Rust binary"
          :depends [native-image]
-         :task (when (seq (fs/modified-since "target/debug/libscimacs.dylib" [libsci "src" "Cargo.toml"]))
+         :task (when (seq (fs/modified-since rust-lib [libsci "src" "Cargo.toml"]))
                  (shell "cargo build"))}
 
   all {:doc "Build all"
        :depends [rustc]
        :task (when-not (fs/exists? local-lib)
-               (fs/create-sym-link local-lib (str "target/debug/libscimacs." lib-ext)))}}}
+               (fs/create-sym-link local-lib rust-lib))}}}
