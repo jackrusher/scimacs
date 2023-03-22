@@ -7,7 +7,7 @@ fn main() {
     let path = "./clj"; // where to find the GraalVM-generated stuff
 
     println!("cargo:rustc-link-search=./clj");
-    println!("cargo:rustc-link-lib=Scimacs");
+    println!("cargo:rustc-link-lib=scimacs");
 
     println!("cargo:rustc-link-search={path}", path = path);
 
