@@ -1,7 +1,7 @@
 {:tasks
  {:requires ([babashka.fs :as fs])
   :init (do
-          (def libsci (str (first (fs/glob "clj" "LibScimacs.{dylib,dll,solib}"))))
+          (def libsci (str (first (fs/glob "clj" "LibScimacs.{dylib,dll,so}"))))
           (def lib-ext (fs/extension libsci))
           (def local-lib (str "scimacs." lib-ext))
           (def uberjar "clj/target/uber.jar"))
@@ -28,8 +28,7 @@
                          "-J-Xmx3g"))}
   rustc {:doc "Build Rust binary"
          :depends [native-image]
-         :task (when (or (seq (fs/modified-since "target" libsci))
-                         (seq (fs/modified-since (str "target/debug/libscimacs." lib-ext) "src/lib.rs")))
+         :task (when (seq (fs/modified-since "target" [libsci "src" "Cargo.toml"]))
                  (shell "cargo build"))}
 
   all {:doc "Build all"
