@@ -1,7 +1,7 @@
 {:tasks
  {:requires ([babashka.fs :as fs])
   :init (do
-          (def libsci (str (first (fs/glob "clj" "LibScimacs.{dylib,dll,so}"))))
+          (def libsci (str (first (fs/glob "clj" "LibScimacs.{dylib,lib,so}"))))
           (def lib-ext (fs/extension libsci))
           (def local-lib (str "scimacs." lib-ext))
           (def uberjar "clj/target/uber.jar")
