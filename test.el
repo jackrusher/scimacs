@@ -21,10 +21,9 @@
               '("[1 2 3]"
                 "(+ 1 1)"
                 "(mapv inc (range 5))"
-                "(reduce + (range 5))")))
+                "(reduce + (range 5))"
+                ;; made sure def'd vars are visible in future invocations
+                "(defn foo [x] (inc x))"
+                "(foo 1)")))
   (message "Could not find loadable module!"))
-
-(scimacs-eval-sci "(defn foo [x] (inc x))")
-;; foo is still defined in the following call:
-(scimacs-eval-sci "(foo 1)")
 
