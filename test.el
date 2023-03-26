@@ -24,6 +24,8 @@
                 "(reduce + (range 5))"
                 ;; made sure def'd vars are visible in future invocations
                 "(defn foo [x] (inc x))"
-                "(foo 1)")))
+                "(foo 1)"
+                ;; apply this emacs function to this argument
+                "(emacs/apply \"message\" \"hello\")")))
   (message "Could not find loadable module!"))
 

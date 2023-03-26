@@ -2,13 +2,13 @@
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
 
-use emacs::{defun, Env}; // , Value, IntoLisp
+use emacs::{defun, Env, IntoLisp }; //, Value
 
 emacs::plugin_is_GPL_compatible!();
 
-use std::ffi::{CStr, CString};
+use std::ffi::{CStr, CString, c_void};
 use std::str::Utf8Error;
-use std::{env, ptr};
+use std::{env, ptr, mem};
 
 // Static handles for the graal isolate. These are initialized when
 // the module is loaded.
@@ -31,11 +31,13 @@ fn my_string_safe(ptr: *mut i8) -> Result<String,Utf8Error> {
     }
 }
 
-fn eval(expr: String) -> String {
+fn eval(env: &Env, expr: String) -> String {
+    let ptr: *mut *const c_void = unsafe { mem::transmute(env) };
     unsafe {
 	    let cexpr = CString::new(expr).expect("CString::new failed");
         let result = eval_string(
             thread as i64,
+            ptr,
             cexpr.as_ptr(),
         );
         let s = my_string_safe(result).unwrap();
@@ -44,7 +46,7 @@ fn eval(expr: String) -> String {
 }
 
 #[emacs::module(name = "scimacs")]
-fn init(_: &Env) -> emacs::Result<()> {
+fn init(_env: &Env) -> emacs::Result<()> {
     unsafe {
         graal_create_isolate(ptr::null_mut(), &mut isolate, &mut thread);
     }
@@ -52,15 +54,43 @@ fn init(_: &Env) -> emacs::Result<()> {
 }
 
 #[defun]
-fn eval_sci(_env: &Env, sexp: String) -> emacs::Result<String>
+fn eval_sci(env: &Env, sexp: String) -> emacs::Result<String>
 {
-    // env.message(eval(sexp.to_owned()))
-    let result = eval(sexp.to_owned());
-
-    Ok(result.to_owned())
+    Ok(eval(env, sexp.to_owned()).to_owned())
 }
 
-// #[defun]
-// fn _copy_text(bundle_id: Option<String>) -> Result<Option<String>> {
-//     Ok(copy_text(bundle_id, None))
-// }
+// TODO
+// - params should be a vector of parameters
+// - doesn't return anything to sci, should return an EDN string
+// - the emacs side should read-from-string each of the params
+#[no_mangle]
+pub extern "C" fn eval_in_emacs(env : &Env, func : *const i8, params : *const i8)
+{
+    // combine these into a single vector of fn + args?
+    let func_str: &CStr = unsafe { CStr::from_ptr(func) };
+    let func_slice: &str = func_str.to_str().unwrap();
+
+    let params_str: &CStr = unsafe { CStr::from_ptr(params) };
+    let params_slice: &str = params_str.to_str().unwrap();
+
+    // should wrap this in an elisp function that prints the result as
+    // an EDN string.
+    let _ret = env.call(func_slice, (params_slice,));
+}
+
+// experimental stuff I'll use later...
+
+// env.call("add-hook", [
+//     env.intern("text-mode-hook")?,
+//     env.intern("variable-pitch-mode")?,
+// ])?;
+
+// let int_type = env.type_of(5.into_lisp(env).unwrap()).unwrap();
+// let same = env.eq(int_type, env.intern("integer").unwrap());
+// println!("{:?}", same);
+
+// let _res = env.call("message", (
+//     "%s: %s",
+//     unsafe { symbol.value(&env) },
+//     unsafe { data.value(&env) },
+// ));

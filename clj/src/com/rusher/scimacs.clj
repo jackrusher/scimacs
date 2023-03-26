@@ -1,6 +1,6 @@
 (ns com.rusher.scimacs
   (:require [sci.core :as sci])
-  (:gen-class :methods [^{:static true} [evalString [String] String]]))
+  (:gen-class :methods [^{:static true} [evalString [java.util.function.BiConsumer String] String]]))
 
 (set! *warn-on-reflection* true)
 
@@ -10,11 +10,17 @@
 (def ctx (sci/init {:namespaces {}
                     :classes {}}))
 
-(defn -evalString [s]
-  (try (pr-str (sci/eval-string* ctx s))
-       (catch Exception e
-         (pr-str {:error (str (type e))
-                  :message (.getMessage e)}))))
-
-;; as second arg to eval-string, this binds a cheshire.core function within sci
-#_{:namespaces {'cheshire.core {'generate-string cheshire/generate-string}}}
+;; TODO BiConsumer -> BiFunction when we add return value
+(defn -evalString [^java.util.function.BiConsumer apply-fn ^String form-string]
+  (try
+    ;; should
+    (pr-str (sci/eval-string*
+             ;; apply-fn closes over our native eval_in_emacs w/ an
+             ;; ephemeral emacs env pointer, so must be reset on every
+             ;; call.
+             ;; TODO currently only sends one param, should be a vector of them
+             (sci/add-namespace! ctx 'emacs {'apply #(.accept apply-fn %1 %2)})
+             form-string))
+    (catch Exception e
+      (pr-str {:error (str (type e))
+               :message (.getMessage e)}))))
