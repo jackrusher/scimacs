@@ -14,24 +14,25 @@ import com.oracle.svm.core.c.CConst;
 import com.rusher.scimacs;
 
 public final class LibScimacs {
-    // TODO should take a vector of params and return an EDN string
-    // that gets read by sci
     @CFunction("eval_in_emacs")
-    public static native void eval_in_emacs(@CConst WordPointer env,
-                                            @CConst CCharPointer func,
-                                            @CConst CCharPointer param);
+    public static native @CConst CCharPointer eval_in_emacs(@CConst WordPointer emacs_env,
+                                                            @CConst CCharPointer func,
+                                                            @CConst CCharPointer param);
     
-    @CEntryPoint(name = "eval_string")
+    @CEntryPoint(name = "sci_eval_string")
     public static @CConst CCharPointer evalString(@CEntryPoint.IsolateThreadContext long isolateId,
-                                                  @CConst WordPointer env,
-                                                  @CConst CCharPointer s) {
-        String expr = CTypeConversion.toJavaString(s);
+                                                  @CConst WordPointer emacs_env,
+                                                  @CConst CCharPointer clojure_string) {
+        String expr = CTypeConversion.toJavaString(clojure_string);
         String result = com.rusher.scimacs.evalString((Object func, Object param) -> {
                 CTypeConversion.CCharPointerHolder func_holder = CTypeConversion.toCString((String)func);
                 CTypeConversion.CCharPointerHolder param_holder = CTypeConversion.toCString((String)param);
                 CCharPointer func_value = func_holder.get();
                 CCharPointer param_value = param_holder.get();
-                eval_in_emacs(env, func_value, param_value);
+                CCharPointer c_str_result = eval_in_emacs(emacs_env, func_value, param_value);
+                String str_result = CTypeConversion.toJavaString(c_str_result);
+                // TODO MEMORY LEAK. Must free eval_result after conversion to a Java string!
+                return str_result;
             },
             expr);
         CTypeConversion.CCharPointerHolder holder = CTypeConversion.toCString(result);

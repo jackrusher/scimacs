@@ -2,11 +2,11 @@
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
 
-use emacs::{defun, Env, IntoLisp }; //, Value
+use emacs::{defun, Env, ErrorKind, ErrorKind::Signal };
 
 emacs::plugin_is_GPL_compatible!();
 
-use std::ffi::{CStr, CString, c_void};
+use std::ffi::{CStr, CString, c_char, c_void};
 use std::str::Utf8Error;
 use std::{env, ptr, mem};
 
@@ -31,11 +31,21 @@ fn my_string_safe(ptr: *mut i8) -> Result<String,Utf8Error> {
     }
 }
 
-fn eval(env: &Env, expr: String) -> String {
-    let ptr: *mut *const c_void = unsafe { mem::transmute(env) };
+#[emacs::module(name = "scimacs")]
+fn init(env: &Env) -> emacs::Result<()> {
     unsafe {
+        graal_create_isolate(ptr::null_mut(), &mut isolate, &mut thread);
+    }
+    env.call("set", (env.intern("scimacs-version")?, option_env!("CARGO_PKG_VERSION")))?;
+    Ok(())
+}
+
+// TODO combine this and eval_string into one function?
+fn eval(env: &Env, expr: String) -> String {
+    unsafe {
+        let ptr: *mut *const c_void = mem::transmute(env);
 	    let cexpr = CString::new(expr).expect("CString::new failed");
-        let result = eval_string(
+        let result = sci_eval_string(
             thread as i64,
             ptr,
             cexpr.as_ptr(),
@@ -45,52 +55,46 @@ fn eval(env: &Env, expr: String) -> String {
     }
 }
 
-#[emacs::module(name = "scimacs")]
-fn init(_env: &Env) -> emacs::Result<()> {
-    unsafe {
-        graal_create_isolate(ptr::null_mut(), &mut isolate, &mut thread);
-    }
-    Ok(())
-}
-
 #[defun]
-fn eval_sci(env: &Env, sexp: String) -> emacs::Result<String>
+fn eval_string(env: &Env, sexp: String) -> emacs::Result<String>
 {
     Ok(eval(env, sexp.to_owned()).to_owned())
 }
 
-// TODO
-// - params should be a vector of parameters
-// - doesn't return anything to sci, should return an EDN string
-// - the emacs side should read-from-string each of the params
 #[no_mangle]
-pub extern "C" fn eval_in_emacs(env : &Env, func : *const i8, params : *const i8)
+pub extern "C" fn eval_in_emacs(env : &Env, func : *const i8, params : *const i8) ->  *const c_char
 {
-    // combine these into a single vector of fn + args?
     let func_str: &CStr = unsafe { CStr::from_ptr(func) };
     let func_slice: &str = func_str.to_str().unwrap();
 
     let params_str: &CStr = unsafe { CStr::from_ptr(params) };
     let params_slice: &str = params_str.to_str().unwrap();
 
-    // should wrap this in an elisp function that prints the result as
-    // an EDN string.
-    let _ret = env.call(func_slice, (params_slice,));
+    // this elisp function catches all errors and converts them to
+    // strings, so we should never see a Err here unless the machine
+    // has run out of memory.
+    match env.call("scimacs-emacs-apply", (func_slice, params_slice)) {
+        Ok(v) => {
+            match v.into_rust::<String>() {
+                Ok(s) => {
+                    let c_str = CString::new(s).unwrap();    
+                    let c_world: *const c_char = c_str.into_raw() as *const c_char;
+                    return c_world;
+                }
+                Err(err) => {
+                    println!("could not make Rust string from emacs string: {:?}", err);
+                }
+            }
+        }
+        Err(e) => {
+            if let Some(&Signal { ref symbol, .. }) = e.downcast_ref::<ErrorKind>() {
+                println!("emacs function call error: {:?}", unsafe{ symbol.value(env)});
+            }
+        }
+    }
+
+    // this should never happen in normal operation
+    let c_str = CString::new("SOMETHING TERRIBLE HAS HAPPENED").unwrap();    
+    let c_world: *const c_char = c_str.into_raw() as *const c_char;
+    return c_world;
 }
-
-// experimental stuff I'll use later...
-
-// env.call("add-hook", [
-//     env.intern("text-mode-hook")?,
-//     env.intern("variable-pitch-mode")?,
-// ])?;
-
-// let int_type = env.type_of(5.into_lisp(env).unwrap()).unwrap();
-// let same = env.eq(int_type, env.intern("integer").unwrap());
-// println!("{:?}", same);
-
-// let _res = env.call("message", (
-//     "%s: %s",
-//     unsafe { symbol.value(&env) },
-//     unsafe { data.value(&env) },
-// ));
