@@ -8,6 +8,7 @@ import org.graalvm.nativeimage.c.struct.CStruct;
 import org.graalvm.nativeimage.c.type.CCharPointer;
 import org.graalvm.nativeimage.c.type.CTypeConversion;
 import org.graalvm.nativeimage.c.type.WordPointer;
+import org.graalvm.nativeimage.UnmanagedMemory;
 import org.graalvm.word.PointerBase;
 import com.oracle.svm.core.c.CConst;
 
@@ -31,7 +32,7 @@ public final class LibScimacs {
                 CCharPointer param_value = param_holder.get();
                 CCharPointer c_str_result = eval_in_emacs(emacs_env, func_value, param_value);
                 String str_result = CTypeConversion.toJavaString(c_str_result);
-                // TODO MEMORY LEAK. Must free eval_result after conversion to a Java string!
+                UnmanagedMemory.free(c_str_result);
                 return str_result;
             },
             expr);
